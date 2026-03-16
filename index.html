@@ -29,11 +29,7 @@ box-shadow:0 0 15px rgba(0,0,0,0.1);
 text-align:center;
 }
 
-h1{
-margin-bottom:20px;
-}
-
-select, input, button{
+select,input,button{
 width:100%;
 padding:12px;
 margin-top:10px;
@@ -51,13 +47,9 @@ button:hover{
 background:#d0d0d0;
 }
 
-hr{
-margin:20px 0;
-}
-
 .movimientos{
 text-align:left;
-margin-top:10px;
+margin-top:15px;
 }
 
 </style>
@@ -68,7 +60,7 @@ margin-top:10px;
 
 <div class="container">
 
-<h1>Control de Dinero</h1>
+<h2>Control de Dinero</h2>
 
 <select id="mes">
 <option>Enero</option>
@@ -108,50 +100,100 @@ margin-top:10px;
 
 let totalProducido = 0;
 let totalGastos = 0;
+let movimientos = [];
 
 function formatearNumero(num){
 return num.toLocaleString('es-CO');
 }
 
+function guardarDatos(){
+
+localStorage.setItem("totalProducido", totalProducido);
+localStorage.setItem("totalGastos", totalGastos);
+localStorage.setItem("movimientos", JSON.stringify(movimientos));
+
+}
+
+function cargarDatos(){
+
+let prod = localStorage.getItem("totalProducido");
+let gast = localStorage.getItem("totalGastos");
+let mov = localStorage.getItem("movimientos");
+
+if(prod) totalProducido = Number(prod);
+if(gast) totalGastos = Number(gast);
+if(mov) movimientos = JSON.parse(mov);
+
+mostrarMovimientos();
+actualizar();
+
+}
+
 function agregarProducido(){
 
-let valor = Number(document.getElementById("valor").value);
+let input = document.getElementById("valor");
+let valor = Number(input.value);
 let mes = document.getElementById("mes").value;
 
-if(valor<=0)return;
+if(valor<=0) return;
 
 totalProducido += valor;
 
-agregarMovimiento("Producido",valor,mes);
+movimientos.push({
+tipo:"Producido",
+valor:valor,
+mes:mes
+});
 
+guardarDatos();
+
+mostrarMovimientos();
 actualizar();
+
+input.value = "";
 
 }
 
 function agregarGasto(){
 
-let valor = Number(document.getElementById("valor").value);
+let input = document.getElementById("valor");
+let valor = Number(input.value);
 let mes = document.getElementById("mes").value;
 
-if(valor<=0)return;
+if(valor<=0) return;
 
 totalGastos += valor;
 
-agregarMovimiento("Gasto",valor,mes);
+movimientos.push({
+tipo:"Gasto",
+valor:valor,
+mes:mes
+});
 
+guardarDatos();
+
+mostrarMovimientos();
 actualizar();
+
+input.value = "";
 
 }
 
-function agregarMovimiento(tipo,valor,mes){
+function mostrarMovimientos(){
 
 let lista = document.getElementById("movimientos");
 
+lista.innerHTML = "";
+
+movimientos.forEach(m => {
+
 let item = document.createElement("p");
 
-item.innerText = mes+" - "+tipo+": $"+formatearNumero(valor);
+item.innerText = m.mes+" - "+m.tipo+": $"+formatearNumero(m.valor);
 
 lista.appendChild(item);
+
+});
 
 }
 
@@ -164,6 +206,8 @@ document.getElementById("totalGastos").innerText = formatearNumero(totalGastos);
 document.getElementById("totalFinal").innerText = formatearNumero(totalProducido - totalGastos);
 
 }
+
+cargarDatos();
 
 </script>
 
