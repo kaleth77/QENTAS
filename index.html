@@ -1,66 +1,74 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Control de Dinero</title>
 
 <style>
 
 body{
-font-family:Arial;
+margin:0;
+font-family:Arial, sans-serif;
 background:#f2f2f2;
-text-align:center;
+display:flex;
+justify-content:center;
+align-items:center;
+min-height:100vh;
 }
 
 .container{
+width:95%;
+max-width:500px;
 background:white;
-width:400px;
-margin:auto;
 padding:20px;
-border-radius:10px;
-box-shadow:0 0 10px gray;
+border-radius:15px;
+box-shadow:0 0 15px rgba(0,0,0,0.1);
+text-align:center;
 }
 
-input,select{
-padding:8px;
-margin:5px;
+h1{
+margin-bottom:20px;
+}
+
+select, input, button{
+width:100%;
+padding:12px;
+margin-top:10px;
+font-size:16px;
+border-radius:8px;
+border:1px solid #ccc;
 }
 
 button{
-padding:8px 15px;
-margin:5px;
+background:#e0e0e0;
 cursor:pointer;
 }
 
-.lista{
-margin-top:15px;
+button:hover{
+background:#d0d0d0;
+}
+
+hr{
+margin:20px 0;
+}
+
+.movimientos{
 text-align:left;
-}
-
-.item{
-display:flex;
-justify-content:space-between;
-background:#f7f7f7;
-padding:5px;
-margin:3px 0;
-border-radius:5px;
-}
-
-.producido{
-color:green;
-}
-
-.gasto{
-color:red;
+margin-top:10px;
 }
 
 </style>
+
 </head>
 
 <body>
 
 <div class="container">
 
-<h2>Control de Dinero</h2>
+<h1>Control de Dinero</h1>
 
 <select id="mes">
 <option>Enero</option>
@@ -77,9 +85,7 @@ color:red;
 <option>Diciembre</option>
 </select>
 
-<br>
-
-<input type="number" id="valor" placeholder="Valor">
+<input id="valor" type="number" placeholder="Valor">
 
 <button onclick="agregarProducido()">Agregar Producido</button>
 <button onclick="agregarGasto()">Agregar Gasto</button>
@@ -94,86 +100,68 @@ color:red;
 
 <h3>Movimientos</h3>
 
-<div id="lista" class="lista"></div>
+<div id="movimientos" class="movimientos"></div>
 
 </div>
 
 <script>
 
-let movimientos = []
+let totalProducido = 0;
+let totalGastos = 0;
 
-function formatear(num){
-return num.toLocaleString('es-CO')
+function formatearNumero(num){
+return num.toLocaleString('es-CO');
 }
 
 function agregarProducido(){
 
-let valor = Number(document.getElementById("valor").value)
-let mes = document.getElementById("mes").value
+let valor = Number(document.getElementById("valor").value);
+let mes = document.getElementById("mes").value;
 
-movimientos.push({
-tipo:"producido",
-valor:valor,
-mes:mes
-})
+if(valor<=0)return;
 
-mostrar()
+totalProducido += valor;
+
+agregarMovimiento("Producido",valor,mes);
+
+actualizar();
 
 }
 
 function agregarGasto(){
 
-let valor = Number(document.getElementById("valor").value)
-let mes = document.getElementById("mes").value
+let valor = Number(document.getElementById("valor").value);
+let mes = document.getElementById("mes").value;
 
-movimientos.push({
-tipo:"gasto",
-valor:valor,
-mes:mes
-})
+if(valor<=0)return;
 
-mostrar()
+totalGastos += valor;
+
+agregarMovimiento("Gasto",valor,mes);
+
+actualizar();
 
 }
 
-function eliminar(i){
-movimientos.splice(i,1)
-mostrar()
+function agregarMovimiento(tipo,valor,mes){
+
+let lista = document.getElementById("movimientos");
+
+let item = document.createElement("p");
+
+item.innerText = mes+" - "+tipo+": $"+formatearNumero(valor);
+
+lista.appendChild(item);
+
 }
 
-function mostrar(){
+function actualizar(){
 
-let lista = document.getElementById("lista")
-lista.innerHTML=""
+document.getElementById("totalProducido").innerText = formatearNumero(totalProducido);
 
-let totalProducido=0
-let totalGastos=0
+document.getElementById("totalGastos").innerText = formatearNumero(totalGastos);
 
-movimientos.forEach((m,i)=>{
-
-let div=document.createElement("div")
-div.className="item"
-
-if(m.tipo=="producido"){
-totalProducido+=m.valor
-}
-
-if(m.tipo=="gasto"){
-totalGastos+=m.valor
-}
-
-div.innerHTML=
-
-m.mes+" - "+m.tipo+" $"+formatear(m.valor)+
-" <button onclick='eliminar("+i+")'>X</button>"
-
-lista.appendChild(div)
-
-})
-
-document.getElementById("totalProducido").innerText=formatear(totalProducido)
-document.getElementById("totalGastos").innerText=formatear(totalGastos)
-document.getElementById("totalFinal").innerText=formatear(totalProducido-totalGastos)
+document.getElementById("totalFinal").innerText = formatearNumero(totalProducido - totalGastos);
 
 }
 
