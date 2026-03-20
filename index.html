@@ -52,6 +52,17 @@ text-align:left;
 margin-top:15px;
 }
 
+.toggle{
+margin-top:15px;
+font-weight:bold;
+cursor:pointer;
+}
+
+#panelMes{
+display:none;
+margin-top:10px;
+}
+
 </style>
 
 </head>
@@ -73,14 +84,25 @@ margin-top:15px;
 
 <hr>
 
-<h3>Total producido: $<span id="totalProducido">0</span></h3>
-<h3>Total gastos: $<span id="totalGastos">0</span></h3>
-<h2>Total final: $<span id="totalFinal">0</span></h2>
+<h3>Total producido del día: $<span id="totalProducido">0</span></h3>
+<h3>Total gastos del día: $<span id="totalGastos">0</span></h3>
+<h2>Total final del día: $<span id="totalFinal">0</span></h2>
 
 <hr>
 
-<h3>Movimientos</h3>
+<div class="toggle" onclick="toggleMes()">
+📊 Ver resumen del mes <span id="flecha">⬇️</span>
+</div>
 
+<div id="panelMes">
+<h3>Producido del mes: $<span id="mesProducido">0</span></h3>
+<h3>Gastos del mes: $<span id="mesGastos">0</span></h3>
+<h2>Total del mes: $<span id="mesTotal">0</span></h2>
+</div>
+
+<hr>
+
+<h3>Movimientos del día</h3>
 <div id="movimientos" class="movimientos"></div>
 
 </div>
@@ -90,6 +112,7 @@ margin-top:15px;
 let totalProducido = 0;
 let totalGastos = 0;
 let movimientos = [];
+let abierto = false;
 
 const meses = [
 "Enero","Febrero","Marzo","Abril","Mayo","Junio",
@@ -97,19 +120,17 @@ const meses = [
 ];
 
 function obtenerClave(){
-let fecha = document.getElementById("fecha").value;
-return fecha;
+return document.getElementById("fecha").value;
 }
 
 function mostrarFechaBonita(){
 let fecha = document.getElementById("fecha").value;
-
 if(!fecha) return;
 
 let partes = fecha.split("-");
-let año = partes[0];
 let mes = meses[Number(partes[1]) - 1];
 let dia = partes[2];
+let año = partes[0];
 
 document.getElementById("fechaTexto").innerText = dia + " de " + mes + " " + año;
 }
@@ -154,8 +175,7 @@ totalProducido += valor;
 
 movimientos.push({
 tipo:"Producido",
-valor:valor,
-fecha:obtenerClave()
+valor:valor
 });
 
 guardarDatos();
@@ -175,8 +195,7 @@ totalGastos += valor;
 
 movimientos.push({
 tipo:"Gasto",
-valor:valor,
-fecha:obtenerClave()
+valor:valor
 });
 
 guardarDatos();
@@ -206,20 +225,60 @@ document.getElementById("totalProducido").innerText = formatearNumero(totalProdu
 document.getElementById("totalGastos").innerText = formatearNumero(totalGastos);
 document.getElementById("totalFinal").innerText = formatearNumero(totalProducido - totalGastos);
 
+calcularMes();
+
 }
 
-// 🔥 cambiar fecha
+function calcularMes(){
+
+let fecha = document.getElementById("fecha").value;
+if(!fecha) return;
+
+let mesActual = fecha.slice(0,7);
+
+let prod = 0;
+let gast = 0;
+
+for(let i=0;i<localStorage.length;i++){
+
+let key = localStorage.key(i);
+
+if(key.startsWith("prod-") && key.includes(mesActual)){
+prod += Number(localStorage.getItem(key));
+}
+
+if(key.startsWith("gast-") && key.includes(mesActual)){
+gast += Number(localStorage.getItem(key));
+}
+
+}
+
+document.getElementById("mesProducido").innerText = formatearNumero(prod);
+document.getElementById("mesGastos").innerText = formatearNumero(gast);
+document.getElementById("mesTotal").innerText = formatearNumero(prod - gast);
+
+}
+
+// 🔥 abrir / cerrar panel
+function toggleMes(){
+
+abierto = !abierto;
+
+document.getElementById("panelMes").style.display = abierto ? "block" : "none";
+document.getElementById("flecha").innerText = abierto ? "⬆️" : "⬇️";
+
+}
+
+// eventos
 document.getElementById("fecha").addEventListener("change", () => {
 mostrarFechaBonita();
 cargarDatos();
 });
 
-// 🔥 cargar hoy automático
+// cargar hoy
 window.onload = () => {
 
 let hoy = new Date();
-
-// 🔥 forma segura
 let fechaHoy = hoy.toISOString().split("T")[0];
 
 document.getElementById("fecha").value = fechaHoy;
