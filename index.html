@@ -29,7 +29,7 @@ box-shadow:0 0 15px rgba(0,0,0,0.1);
 text-align:center;
 }
 
-select,input,button{
+input,button{
 width:100%;
 padding:12px;
 margin-top:10px;
@@ -62,20 +62,9 @@ margin-top:15px;
 
 <h2>Control de Dinero</h2>
 
-<select id="mes">
-<option>Enero</option>
-<option>Febrero</option>
-<option>Marzo</option>
-<option>Abril</option>
-<option>Mayo</option>
-<option>Junio</option>
-<option>Julio</option>
-<option>Agosto</option>
-<option>Septiembre</option>
-<option>Octubre</option>
-<option>Noviembre</option>
-<option>Diciembre</option>
-</select>
+<input type="date" id="fecha">
+
+<h3 id="fechaTexto"></h3>
 
 <input id="valor" type="number" placeholder="Valor">
 
@@ -102,27 +91,54 @@ let totalProducido = 0;
 let totalGastos = 0;
 let movimientos = [];
 
+const meses = [
+"Enero","Febrero","Marzo","Abril","Mayo","Junio",
+"Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"
+];
+
+function obtenerClave(){
+let fecha = document.getElementById("fecha").value;
+return fecha;
+}
+
+function mostrarFechaBonita(){
+let fecha = document.getElementById("fecha").value;
+
+if(!fecha) return;
+
+let partes = fecha.split("-");
+let año = partes[0];
+let mes = meses[Number(partes[1]) - 1];
+let dia = partes[2];
+
+document.getElementById("fechaTexto").innerText = dia + " de " + mes + " " + año;
+}
+
 function formatearNumero(num){
 return num.toLocaleString('es-CO');
 }
 
 function guardarDatos(){
 
-localStorage.setItem("totalProducido", totalProducido);
-localStorage.setItem("totalGastos", totalGastos);
-localStorage.setItem("movimientos", JSON.stringify(movimientos));
+let clave = obtenerClave();
+
+localStorage.setItem("prod-"+clave, totalProducido);
+localStorage.setItem("gast-"+clave, totalGastos);
+localStorage.setItem("mov-"+clave, JSON.stringify(movimientos));
 
 }
 
 function cargarDatos(){
 
-let prod = localStorage.getItem("totalProducido");
-let gast = localStorage.getItem("totalGastos");
-let mov = localStorage.getItem("movimientos");
+let clave = obtenerClave();
 
-if(prod) totalProducido = Number(prod);
-if(gast) totalGastos = Number(gast);
-if(mov) movimientos = JSON.parse(mov);
+let prod = localStorage.getItem("prod-"+clave);
+let gast = localStorage.getItem("gast-"+clave);
+let mov = localStorage.getItem("mov-"+clave);
+
+totalProducido = prod ? Number(prod) : 0;
+totalGastos = gast ? Number(gast) : 0;
+movimientos = mov ? JSON.parse(mov) : [];
 
 mostrarMovimientos();
 actualizar();
@@ -131,10 +147,7 @@ actualizar();
 
 function agregarProducido(){
 
-let input = document.getElementById("valor");
-let valor = Number(input.value);
-let mes = document.getElementById("mes").value;
-
+let valor = Number(document.getElementById("valor").value);
 if(valor<=0) return;
 
 totalProducido += valor;
@@ -142,24 +155,20 @@ totalProducido += valor;
 movimientos.push({
 tipo:"Producido",
 valor:valor,
-mes:mes
+fecha:obtenerClave()
 });
 
 guardarDatos();
-
 mostrarMovimientos();
 actualizar();
 
-input.value = "";
+document.getElementById("valor").value = "";
 
 }
 
 function agregarGasto(){
 
-let input = document.getElementById("valor");
-let valor = Number(input.value);
-let mes = document.getElementById("mes").value;
-
+let valor = Number(document.getElementById("valor").value);
 if(valor<=0) return;
 
 totalGastos += valor;
@@ -167,32 +176,26 @@ totalGastos += valor;
 movimientos.push({
 tipo:"Gasto",
 valor:valor,
-mes:mes
+fecha:obtenerClave()
 });
 
 guardarDatos();
-
 mostrarMovimientos();
 actualizar();
 
-input.value = "";
+document.getElementById("valor").value = "";
 
 }
 
 function mostrarMovimientos(){
 
 let lista = document.getElementById("movimientos");
-
 lista.innerHTML = "";
 
 movimientos.forEach(m => {
-
 let item = document.createElement("p");
-
-item.innerText = m.mes+" - "+m.tipo+": $"+formatearNumero(m.valor);
-
+item.innerText = m.tipo + ": $" + formatearNumero(m.valor);
 lista.appendChild(item);
-
 });
 
 }
@@ -200,14 +203,31 @@ lista.appendChild(item);
 function actualizar(){
 
 document.getElementById("totalProducido").innerText = formatearNumero(totalProducido);
-
 document.getElementById("totalGastos").innerText = formatearNumero(totalGastos);
-
 document.getElementById("totalFinal").innerText = formatearNumero(totalProducido - totalGastos);
 
 }
 
+// 🔥 cambiar fecha
+document.getElementById("fecha").addEventListener("change", () => {
+mostrarFechaBonita();
 cargarDatos();
+});
+
+// 🔥 cargar hoy automático
+window.onload = () => {
+
+let hoy = new Date();
+
+// 🔥 forma segura
+let fechaHoy = hoy.toISOString().split("T")[0];
+
+document.getElementById("fecha").value = fechaHoy;
+
+mostrarFechaBonita();
+cargarDatos();
+
+};
 
 </script>
 
